@@ -1,8 +1,6 @@
-from algoritmos.backtracking import resolver_backtracking
-from validacion.validador import validar_tablero
-from utils.sudoku_utils import imprimir_tablero
+from interfaz import AplicacionSudoku
 
-# Sudoku de ejemplo.
+#Sudoku de ejemplo (provisional mientras se crea el generador)
 TABLERO_EJEMPLO = [
     [5, 3, 0, 0, 7, 0, 0, 0, 0],
     [6, 0, 0, 1, 9, 5, 0, 0, 0],
@@ -15,62 +13,11 @@ TABLERO_EJEMPLO = [
     [0, 0, 0, 0, 8, 0, 0, 7, 9]
 ]
 
-# Salida por consola es temporal para pruebas, los resultados se mostraran mediante una interfaz grafica.
-def mostrar_estadisticas(estadisticas):
-    print("\nESTADISTICAS DEL ALGORITMO")
-    print("--------------------------")
-
-    print("Nodos explorados:", estadisticas["nodos"])
-    print("Retrocesos:", estadisticas["retrocesos"])
-
-    tiempo = estadisticas["tiempo"]
-    print("Tiempo de ejecucion:", round(tiempo, 6), "segundos")
-
 
 def main():
-    print("======================================")
-    print("   GENERADOR Y RESOLUTOR DE SUDOKU")
-    print("======================================")
+    aplicacion = AplicacionSudoku(TABLERO_EJEMPLO)
+    aplicacion.mainloop()
 
-    print("\nTABLERO INICIAL:")
-    imprimir_tablero(TABLERO_EJEMPLO)
-
-    valido, mensaje = validar_tablero(TABLERO_EJEMPLO)
-
-    print("\nVALIDACION INICIAL:")
-    print(mensaje)
-
-    if not valido:
-        print("No se puede resolver el tablero.")
-        return
-
-    print("\nRESOLVIENDO SUDOKU...")
-
-    solucion, estadisticas = resolver_backtracking(TABLERO_EJEMPLO)
-
-    if solucion is None:
-        print("\nNo se encontro una solucion.")
-        print(estadisticas["mensaje"])
-        mostrar_estadisticas(estadisticas)
-        return
-
-    print("\nSOLUCION ENCONTRADA:")
-    imprimir_tablero(solucion)
-
-    valido, mensaje = validar_tablero(
-        solucion,
-        permitir_vacios=False
-    )
-
-    print("\nVALIDACION DE LA SOLUCION:")
-    print(mensaje)
-
-    if valido:
-        print("Resultado: Sudoku resuelto correctamente.")
-    else:
-        print("Resultado: La solucion no es valida.")
-
-    mostrar_estadisticas(estadisticas)
 
 if __name__ == "__main__":
     main()
