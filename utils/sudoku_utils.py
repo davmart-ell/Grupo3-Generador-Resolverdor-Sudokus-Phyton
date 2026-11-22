@@ -3,105 +3,58 @@ VACIO = 0
 
 
 def copiar_tablero(tablero):
-    copia = []
-
-    for fila in tablero:
-        nueva_fila = []
-
-        for numero in fila:
-            nueva_fila.append(numero)
-
-        copia.append(nueva_fila)
-
-    return copia
+    return [list(fila) for fila in tablero]
 
 
 def encontrar_vacio(tablero):
     for fila in range(TAMANO):
-        for columna in range(TAMANO):
-
-            if tablero[fila][columna] == VACIO:
-                return fila, columna
-
+        for col in range(TAMANO):
+            if tablero[fila][col] == VACIO:
+                return fila, col
     return None
 
 
-def candidatos(tablero, fila, columna):
-    if fila < 0 or fila >= TAMANO:
+def candidatos(tablero, fila, col):
+    if not (0 <= fila < TAMANO and 0 <= col < TAMANO):
         return []
-
-    if columna < 0 or columna >= TAMANO:
-        return []
-
-    if tablero[fila][columna] != VACIO:
+    if tablero[fila][col] != VACIO:
         return []
 
     usados = set()
+    for i in range(TAMANO):
+        usados.add(tablero[fila][i])
+        usados.add(tablero[i][col])
 
-    # Registrar los numeros de la fila.
-    for numero in tablero[fila]:
+    f0 = (fila // 3) * 3
+    c0 = (col // 3) * 3
+    for f in range(f0, f0 + 3):
+        for c in range(c0, c0 + 3):
+            usados.add(tablero[f][c])
 
-        if numero != VACIO:
-            usados.add(numero)
-
-    # Registrar los numeros de la columna.
-    for f in range(TAMANO):
-
-        numero = tablero[f][columna]
-
-        if numero != VACIO:
-            usados.add(numero)
-
-    # Identificar el inicio del subcuadro 3x3.
-    inicio_fila = (fila // 3) * 3
-    inicio_columna = (columna // 3) * 3
-
-    # Registrar los numeros del subcuadro.
-    for f in range(inicio_fila, inicio_fila + 3):
-        for c in range(inicio_columna, inicio_columna + 3):
-
-            numero = tablero[f][c]
-
-            if numero != VACIO:
-                usados.add(numero)
-
-    # Construir la lista de candidatos.
     opciones = []
-
     for numero in range(1, TAMANO + 1):
-
         if numero not in usados:
             opciones.append(numero)
-
     return opciones
 
 
 def tablero_completo(tablero):
     for fila in tablero:
-        for numero in fila:
-
-            if numero == VACIO:
-                return False
-
+        if VACIO in fila:
+            return False
     return True
 
 
 def imprimir_tablero(tablero):
     for fila in range(TAMANO):
-
-        for columna in range(TAMANO):
-
-            numero = tablero[fila][columna]
-
+        for col in range(TAMANO):
+            numero = tablero[fila][col]
             if numero == VACIO:
                 print(".", end=" ")
             else:
                 print(numero, end=" ")
-
-            if (columna + 1) % 3 == 0 and columna < TAMANO - 1:
+            if (col + 1) % 3 == 0 and col < TAMANO - 1:
                 print("|", end=" ")
-
         print()
-
         if (fila + 1) % 3 == 0 and fila < TAMANO - 1:
             print("-" * 21)
