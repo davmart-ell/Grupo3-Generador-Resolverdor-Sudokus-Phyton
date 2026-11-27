@@ -3,6 +3,8 @@ import random
 from utils.sudoku_utils import TAMANO, VACIO, copiar_tablero
 from validacion.validador import validar_tablero, es_seguro
 
+CAJA = int(TAMANO ** 0.5)  # 3 para un tablero 9x9
+
 
 def llenar(tablero, fila, col):
     if fila == TAMANO:
@@ -23,25 +25,67 @@ def llenar(tablero, fila, col):
     return False
 
 
-def contar(tablero, fila, col, limite):
-    if fila == TAMANO:
-        return 1
+def contar(tablero, limite):
+    """Cuenta soluciones (hasta 'limite') usando MRV y máscaras de bits.
+    No modifica el tablero recibido."""
+    filas = [0] * TAMANO
+    cols = [0] * TAMANO
+    cajas = [0] * TAMANO
 
-    if col == TAMANO:
-        return contar(tablero, fila + 1, 0, limite)
+    for f in range(TAMANO):
+        for c in range(TAMANO):
+            v = tablero[f][c]
+            if v != VACIO:
+                bit = 1 << v
+                filas[f] |= bit
+                cols[c] |= bit
+                cajas[(f // CAJA) * CAJA + c // CAJA] |= bit
 
-    if tablero[fila][col] != VACIO:
-        return contar(tablero, fila, col + 1, limite)
+    vacias = [(f, c) for f in range(TAMANO) for c in range(TAMANO)
+              if tablero[f][c] == VACIO]
 
-    total = 0
-    for numero in range(1, TAMANO + 1):
-        if es_seguro(tablero, fila, col, numero):
-            tablero[fila][col] = numero
-            total += contar(tablero, fila, col + 1, limite)
-            tablero[fila][col] = VACIO  # Deshacer
-            if total >= limite:
-                return limite
-    return total
+    TODOS = (1 << (TAMANO + 1)) - 2  # bits del 1 al TAMANO
+
+    def resolver(restantes):
+        if not restantes:
+            return 1
+
+        # MRV: elegir la celda con menos candidatos
+        mejor_i = -1
+        mejor_mask = 0
+        mejor_n = TAMANO + 1
+        for i, (f, c) in enumerate(restantes):
+            usados = filas[f] | cols[c] | cajas[(f // CAJA) * CAJA + c // CAJA]
+            mask = TODOS & ~usados
+            n = bin(mask).count("1")
+            if n < mejor_n:
+                mejor_n, mejor_mask, mejor_i = n, mask, i
+                if n <= 1:
+                    break
+
+        if mejor_n == 0:
+            return 0
+
+        f, c = restantes[mejor_i]
+        b = (f // CAJA) * CAJA + c // CAJA
+        resto = restantes[:mejor_i] + restantes[mejor_i + 1:]
+
+        total = 0
+        for num in range(1, TAMANO + 1):
+            bit = 1 << num
+            if mejor_mask & bit:
+                filas[f] |= bit
+                cols[c] |= bit
+                cajas[b] |= bit
+                total += resolver(resto)
+                filas[f] &= ~bit
+                cols[c] &= ~bit
+                cajas[b] &= ~bit
+                if total >= limite:
+                    return total
+        return total
+
+    return resolver(vacias)
 
 
 class GeneradorSudoku:
@@ -62,7 +106,7 @@ class GeneradorSudoku:
         if not valido:
             return 0
 
-        return contar(copiar_tablero(tablero), 0, 0, limite)
+        return contar(tablero, limite)
 
     def generar(self, dificultad="Medio"):
         dificultades = list(self.NIVELES) + [self.DIFICULTAD_EXTREMA]
