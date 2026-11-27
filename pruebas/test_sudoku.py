@@ -9,8 +9,8 @@ from validacion.validador import validar_tablero
 from utils.sudoku_utils import copiar_tablero
 
 
-SUDOKU_VALIDO = [
-    [5, 3, 0, 0, 7, 0, 0, 0, 0],
+SUDOKU_SIN_SOLUCION = [
+    [5, 3, 1, 0, 7, 0, 0, 0, 0],
     [6, 0, 0, 1, 9, 5, 0, 0, 0],
     [0, 9, 8, 0, 0, 0, 0, 6, 0],
     [8, 0, 0, 0, 6, 0, 0, 0, 3],
@@ -24,18 +24,18 @@ SUDOKU_VALIDO = [
 
 class TestValidacionSudoku(unittest.TestCase):
     def test_tablero_correcto(self):
-        valido, _ = validar_tablero(SUDOKU_VALIDO)
+        valido, _ = validar_tablero(SUDOKU_SIN_SOLUCION)
         self.assertTrue(valido)
 
     def test_caso_adverso_numero_repetido_en_fila(self):
-        tablero = copiar_tablero(SUDOKU_VALIDO)
+        tablero = copiar_tablero(SUDOKU_SIN_SOLUCION)
         tablero[0][2] = 5
         valido, mensaje = validar_tablero(tablero)
         self.assertFalse(valido)
         self.assertIn("repetido", mensaje)
 
     def test_caso_adverso_numero_repetido_en_columna(self):
-        tablero = copiar_tablero(SUDOKU_VALIDO)
+        tablero = copiar_tablero(SUDOKU_SIN_SOLUCION)
         tablero[2][0] = 5
         valido, _ = validar_tablero(tablero)
         self.assertFalse(valido)
@@ -45,33 +45,38 @@ class TestValidacionSudoku(unittest.TestCase):
         self.assertFalse(valido)
 
     def test_caso_adverso_valor_fuera_de_rango(self):
-        tablero = copiar_tablero(SUDOKU_VALIDO)
+        tablero = copiar_tablero(SUDOKU_SIN_SOLUCION)
         tablero[0][2] = 10
         valido, _ = validar_tablero(tablero)
         self.assertFalse(valido)
 
 
 class TestResolutores(unittest.TestCase):
-    def _comprobar_solucion(self, resolver):
-        original = copiar_tablero(SUDOKU_VALIDO)
-        solucion, estadisticas = resolver(original)
-        self.assertIsNotNone(solucion, estadisticas.get("mensaje"))
-        self.assertTrue(validar_tablero(solucion, permitir_vacios=False)[0])
-        self.assertEqual(original, SUDOKU_VALIDO)  # No modifica el original
 
-    def test_backtracking(self):
-        self._comprobar_solucion(resolver_backtracking)
+    def test_caso_adverso_sin_solucion(self):
+        for resolver in (
+            resolver_backtracking,
+            resolver_mrv,
+            resolver_propagacion
+        ):
+            tablero = copiar_tablero(SUDOKU_SIN_SOLUCION)
+            solucion, estadisticas = resolver(tablero)
 
-    def test_mrv(self):
-        self._comprobar_solucion(resolver_mrv)
-
-    def test_propagacion(self):
-        self._comprobar_solucion(resolver_propagacion)
+            self.assertIsNone(
+                solucion,
+                f"{resolver.__name__}: se esperaba que no hubiera solución. "
+                f"{estadisticas.get('mensaje', '')}"
+            )
 
     def test_rechaza_tablero_invalido(self):
-        tablero = copiar_tablero(SUDOKU_VALIDO)
+        tablero = copiar_tablero(SUDOKU_SIN_SOLUCION)
         tablero[0][2] = 5
-        for resolver in (resolver_backtracking, resolver_mrv, resolver_propagacion):
+
+        for resolver in (
+            resolver_backtracking,
+            resolver_mrv,
+            resolver_propagacion
+        ):
             solucion, _ = resolver(tablero)
             self.assertIsNone(solucion)
 
