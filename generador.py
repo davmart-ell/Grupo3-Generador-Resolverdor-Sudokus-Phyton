@@ -90,7 +90,7 @@ def contar(tablero, limite):
 
 class GeneradorSudoku:
     NIVELES = {"Muy fácil": 1, "Medio": 45, "Difícil": 52}
-    DIFICULTAD_EXTREMA = "Muy difícil"
+    DIFICULTAD_1CASILLA = "1 casilla"
 
     def generar_tablero_completo(self):
         tablero = [[VACIO] * TAMANO for _ in range(TAMANO)]
@@ -109,7 +109,7 @@ class GeneradorSudoku:
         return contar(tablero, limite)
 
     def generar(self, dificultad="Medio"):
-        dificultades = list(self.NIVELES) + [self.DIFICULTAD_EXTREMA]
+        dificultades = list(self.NIVELES) + [self.DIFICULTAD_1CASILLA]
         if dificultad not in dificultades:
             raise ValueError(
                 "Dificultad no válida. Elige: " + ", ".join(dificultades)
@@ -117,7 +117,7 @@ class GeneradorSudoku:
 
         solucion = self.generar_tablero_completo()
 
-        if dificultad == self.DIFICULTAD_EXTREMA:
+        if dificultad == self.DIFICULTAD_1CASILLA:
             tablero = [[VACIO] * TAMANO for _ in range(TAMANO)]
             fila = random.randrange(TAMANO)
             col = random.randrange(TAMANO)

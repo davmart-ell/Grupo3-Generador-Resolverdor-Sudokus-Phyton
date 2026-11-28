@@ -9,7 +9,7 @@ from utils.sudoku_utils import copiar_tablero
 RESOLUTORES = (
     ("Backtracking", resolver_backtracking),
     ("Backtracking + MRV", resolver_mrv),
-    ("Propagación + MRV", resolver_propagacion),
+    ("Backtracking + MRV + Propagación", resolver_propagacion),
 )
 
 
