@@ -1,1 +1,85 @@
-# falta codificar
+"""Pruebas unitarias de validación y de los tres resolutores."""
+
+import unittest
+
+from algoritmos.backtracking import resolver_backtracking
+from algoritmos.heuristica_mrv import resolver_mrv
+from algoritmos.propagacion import resolver_propagacion
+from validacion.validador import validar_tablero
+from utils.sudoku_utils import copiar_tablero
+
+
+SUDOKU_SIN_SOLUCION = [
+    [5, 3, 1, 0, 7, 0, 0, 0, 0],
+    [6, 0, 0, 1, 9, 5, 0, 0, 0],
+    [0, 9, 8, 0, 0, 0, 0, 6, 0],
+    [8, 0, 0, 0, 6, 0, 0, 0, 3],
+    [4, 0, 0, 8, 0, 3, 0, 0, 1],
+    [7, 0, 0, 0, 2, 0, 0, 0, 6],
+    [0, 6, 0, 0, 0, 0, 2, 8, 0],
+    [0, 0, 0, 4, 1, 9, 0, 0, 5],
+    [0, 0, 0, 0, 8, 0, 0, 7, 9],
+]
+
+
+class TestValidacionSudoku(unittest.TestCase):
+    def test_tablero_correcto(self):
+        valido, _ = validar_tablero(SUDOKU_SIN_SOLUCION)
+        self.assertTrue(valido)
+
+    def test_caso_adverso_numero_repetido_en_fila(self):
+        tablero = copiar_tablero(SUDOKU_SIN_SOLUCION)
+        tablero[0][2] = 5
+        valido, mensaje = validar_tablero(tablero)
+        self.assertFalse(valido)
+        self.assertIn("repetido", mensaje)
+
+    def test_caso_adverso_numero_repetido_en_columna(self):
+        tablero = copiar_tablero(SUDOKU_SIN_SOLUCION)
+        tablero[2][0] = 5
+        valido, _ = validar_tablero(tablero)
+        self.assertFalse(valido)
+
+    def test_caso_adverso_tablero_con_dimension_incorrecta(self):
+        valido, _ = validar_tablero([[0] * 8 for _ in range(9)])
+        self.assertFalse(valido)
+
+    def test_caso_adverso_valor_fuera_de_rango(self):
+        tablero = copiar_tablero(SUDOKU_SIN_SOLUCION)
+        tablero[0][2] = 10
+        valido, _ = validar_tablero(tablero)
+        self.assertFalse(valido)
+
+
+class TestResolutores(unittest.TestCase):
+
+    def test_caso_adverso_sin_solucion(self):
+        for resolver in (
+            resolver_backtracking,
+            resolver_mrv,
+            resolver_propagacion
+        ):
+            tablero = copiar_tablero(SUDOKU_SIN_SOLUCION)
+            solucion, estadisticas = resolver(tablero)
+
+            self.assertIsNone(
+                solucion,
+                f"{resolver.__name__}: se esperaba que no hubiera solución. "
+                f"{estadisticas.get('mensaje', '')}"
+            )
+
+    def test_rechaza_tablero_invalido(self):
+        tablero = copiar_tablero(SUDOKU_SIN_SOLUCION)
+        tablero[0][2] = 5
+
+        for resolver in (
+            resolver_backtracking,
+            resolver_mrv,
+            resolver_propagacion
+        ):
+            solucion, _ = resolver(tablero)
+            self.assertIsNone(solucion)
+
+
+if __name__ == "__main__":
+    unittest.main(verbosity=2)
